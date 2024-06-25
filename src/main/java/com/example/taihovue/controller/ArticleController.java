@@ -1,6 +1,7 @@
 package com.example.taihovue.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -34,7 +35,7 @@ public class ArticleController {
     }
 
     @PostMapping
-    public Result<String> add(@RequestBody Article article) {
+    public Result<String> add(@RequestBody @Validated Article article) {
         articleService.add(article);
         return Result.success();
     }
