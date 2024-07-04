@@ -1,2 +1,15 @@
-package com.example.taihovue.pojo;public class PageBean {
+package com.example.taihovue.pojo;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class PageBean <T>{
+    private Long total;
+    private List<T> items;
 }

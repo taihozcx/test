@@ -2,9 +2,12 @@ package com.example.taihovue.controller;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.hibernate.validator.constraints.URL;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -31,6 +34,8 @@ import jakarta.validation.constraints.Pattern;
 public class UserController {
     @Autowired
     private UserService userService;
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
 
     @PostMapping("/register")
     public Result<String> register(@Pattern(regexp = "^\\S{5,16}$") String username,
@@ -64,7 +69,9 @@ public class UserController {
             claims.put("id", loginUser.getId());
             claims.put("username", loginUser.getUsername());
             String token = JwtUtil.genToken(claims);
-            ;
+            // 把token存入redis
+            ValueOperations<String, String> operations = stringRedisTemplate.opsForValue();
+            operations.set(token,token,1, TimeUnit.HOURS);
             return Result.success(token);
         }
         return Result.error("用户名或密码错误！");
@@ -93,7 +100,7 @@ public class UserController {
     }
 
     @PatchMapping("/updatePwd")
-    public Result<String> updatePwd(@RequestBody Map<String, String> params) {
+    public Result<String> updatePwd(@RequestBody Map<String, String> params,@RequestHeader("Authorization") String token) {
         // 1.参数校验
         String oldPwd = params.get("old_pwd");
         String newPwd = params.get("new_pwd");
@@ -116,6 +123,9 @@ public class UserController {
 
         // 2.调用Service完成密码更新
         userService.updatePwd(newPwd);
+        // 删除redis中原来的token
+        ValueOperations<String, String> operations = stringRedisTemplate.opsForValue();
+        operations.getOperations().delete(token);
         return Result.success();
     }
 
